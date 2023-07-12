@@ -1,3 +1,8 @@
+local function saveToConfig(k, v)
+    candler.config[k] = v
+    config:save("candler", candler.config)
+end
+
 events.TICK:register(function()
     if candler then
         candler.lib.setCommand("Candler", "config", {
@@ -24,8 +29,8 @@ events.TICK:register(function()
                 printJson('[{"text":"ERROR!", "color":"red", "bold":true}, {"text":" This config option does not exist! Maybe check for typos?", "color":"gray", "bold":false}]')
                 return
             end
+            -- print(type(candler.config[args[1]]))
             -- if true then
-            print(type(candler.config[args[1]]))
             if type(candler.config[args[1]]) == "number" then
                 if not tonumber(args[2]) then
                     printJson('[{"text":"ERROR!", "color":"red", "bold":true}, {"text":" Incorrect type! This is a ' .. type(candler.config[args[1]]) .. '!", "color":"gray", "bold":false}]')

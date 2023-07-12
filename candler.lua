@@ -14,11 +14,6 @@ if config:load("candler") then
     candler.config = config:load("candler")
 end
 
-local function saveToConfig(k, v)
-    candler.config[k] = v
-    config:save("candler", candler.config)
-end
-
 local function split(inputstr, sep)
     if sep == nil then
         sep = "%s"
