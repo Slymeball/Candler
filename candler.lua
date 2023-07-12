@@ -215,8 +215,8 @@ lib.newCategory("Candler", {
     description = "A command interpreter for Figura.",
     author = "Slymeball",
     version = "0.1.1",
-    website = "https://github.com/Slymeball/figura-avatars/tree/main/Rewrite/Candler",
-    issues = "https://github.com/Slymeball/figura-avatars/issues"
+    website = "https://github.com/Slymeball/Candler/",
+    issues = "https://github.com/Slymeball/Candler/issues"
 })
 
 candler.lib = lib
