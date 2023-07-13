@@ -1,7 +1,7 @@
 require(... .. ".register")
 
 events.TICK:register(function()
-    if candler then
+    if candler and candler.cats.examples then
         candler.lib.setCommand("Examples", "alias", {
             command = "alias", -- The main command that should be shown on help pages.
             aliases = {"what", "command", "was", "used"}, -- Every other command that should lead to this file.
