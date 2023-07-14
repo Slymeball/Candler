@@ -25,74 +25,6 @@ local function split(inputstr, sep)
     return t
 end
 
-
-events.CHAT_SEND_MESSAGE:register(function(msg)
-    if string.sub(msg, 1, string.len(candler.config.prefix)) ~= candler.config.prefix then
-        return msg
-    else
-        local cmd = string.sub(msg, string.len(candler.config.prefix)+1, -1)
-        -- print(cmd)
-        
-        local args = split(cmd, " ")
-        
-        if candler.config.printCommand >=1 then
-            local jsonMsg = '[{"text":"> ","color":"dark_gray"}'
-            for i, v in ipairs(args) do
-                local thing = string.gsub(v, "\\", "\\\\")
-                thing = string.gsub(thing, "\"", "\\\"")
-                if i == 1 then
-                    jsonMsg = jsonMsg .. ', {"text":"' .. thing .. ' ", "color":"gray"}'
-                else
-                    jsonMsg = jsonMsg .. ', {"text":"' .. thing .. ' ", "color":"aqua"}'
-                end
-            end
-            jsonMsg = jsonMsg .. ', {"text":"\n"}]'
-            printJson(jsonMsg)
-        end
-        
-        host:appendChatHistory(msg)
-
-        if cmd == "" then
-            printJson('[{"text":"ERROR!", "color":"red", "bold":true}, {"text":" No command specified. Type \\\"' .. candler.config.prefix .. 'help\\\" for help.", "color":"gray", "bold":false}]')
-            return nil
-        end
-
-        for k, v in pairs(candler.commands) do
-            if k == string.lower(args[1]) then
-                local aliasused = args[1]
-                table.remove(args, 1)
-                v(args, aliasused)
-                return nil
-            end
-        end
-
-        printJson('[{"text":"ERROR!", "color":"red", "bold":true}, {"text":" Unknown command. Type \\\"' .. candler.config.prefix .. 'help\\\" for help.", "color":"gray", "bold":false}]')
-
-        return nil
-    end
-end)
-
-events.RENDER:register(function()
-    if host:getChatText() then
-        if string.sub(host:getChatText(), 1, string.len(candler.config.prefix)) == candler.config.prefix then
-            host:setChatColor(vectors.hexToRGB("#54fbfb"))
-        else
-            host:setChatColor(vec(1,1,1))
-        end
-    end
-end)
-
--- ========== COMMAND TOOLS ========== --
-function requireArgs(l, args)
-    for _, v in ipairs(l) do
-        if not args[v] then
-            print("Error! Argument " .. tostring(v) .. " required!")
-            return false
-        end
-    end
-    return true
-end
-
 -- ========== LIBRARY ========== --
 local lib = {}
 
@@ -206,6 +138,89 @@ function lib.removeCommand(cat, name)
     candler.cats[cat].commands[name] = nil
 end
 
+-- Send a command on behalf of the user. For sending a command with Minecraft's text JSON, use runCommand with value "/::candler." as your prefix.
+---@param cmd string The command to send to Candler.
+---@param fb boolean Whether Candler should print the command back to the user. Remember that this will not print feedback if the config option "printCommnad" is 1 or higher.
+function lib.sendCommand(cmd, fb)
+    local args = split(cmd, " ")
+        
+        if candler.config.printCommand >=1 and fb then
+            local jsonMsg = '[{"text":"> ","color":"dark_gray"}'
+            for i, v in ipairs(args) do
+                local thing = string.gsub(v, "\\", "\\\\")
+                thing = string.gsub(thing, "\"", "\\\"")
+                if i == 1 then
+                    jsonMsg = jsonMsg .. ', {"text":"' .. thing .. ' ", "color":"gray"}'
+                else
+                    jsonMsg = jsonMsg .. ', {"text":"' .. thing .. ' ", "color":"aqua"}'
+                end
+            end
+            jsonMsg = jsonMsg .. ', {"text":"\n"}]'
+            printJson(jsonMsg)
+        end
+        
+        if cmd == "" then
+            printJson('[{"text":"ERROR!", "color":"red", "bold":true}, {"text":" No command specified. Type \\\"' .. candler.config.prefix .. 'help\\\" for help.", "color":"gray", "bold":false}]')
+            return nil
+        end
+
+        for k, v in pairs(candler.commands) do
+            if k == string.lower(args[1]) then
+                local aliasused = args[1]
+                table.remove(args, 1)
+
+                local _, err = pcall(function()
+                    v(args, aliasused)
+                end)
+
+                if err then
+                    printJson('[{"text":"ERROR!", "color":"red", "bold":true}, {"text":" Your command errored! No need to worry, however, Candler prevented your avatar from crashing!", "color":"gray", "bold":false},{"text":"\n\n' .. err .. '", "color":"red","bold":false}]')
+                end
+
+                return nil
+            end
+        end
+
+        printJson('[{"text":"ERROR!", "color":"red", "bold":true}, {"text":" Unknown command. Type \\\"' .. candler.config.prefix .. 'help\\\" for help.", "color":"gray", "bold":false}]')
+end
+
+candler.lib = lib
+
+-- ========= MESSAGE HANDLER ==========--
+
+events.CHAT_SEND_MESSAGE:register(function(msg)
+    if string.sub(msg, 1, string.len(candler.config.prefix)) == candler.config.prefix then
+        local cmd = string.sub(msg, string.len(candler.config.prefix)+1, -1)
+        lib.sendCommand(cmd, true)
+        host:appendChatHistory(msg)
+        return nil
+    end
+    return msg
+end)
+
+events.RENDER:register(function()
+    if host:getChatText() then
+        if string.sub(host:getChatText(), 1, string.len(candler.config.prefix)) == candler.config.prefix then
+            host:setChatColor(vectors.hexToRGB("#54fbfb"))
+        else
+            host:setChatColor(vec(1,1,1))
+        end
+    end
+end)
+
+-- ========== COMMAND TOOLS ========== --
+function requireArgs(l, args)
+    for _, v in ipairs(l) do
+        if not args[v] then
+            print("Error! Argument " .. tostring(v) .. " required!")
+            return false
+        end
+    end
+    return true
+end
+
+-- ========== REGISTER CATEGORY ========== --
+
 lib.newCategory("Candler", {
     description = "A command interpreter for Figura.",
     author = "Slymeball",
@@ -213,7 +228,5 @@ lib.newCategory("Candler", {
     website = "https://github.com/Slymeball/Candler/",
     issues = "https://github.com/Slymeball/Candler/issues"
 })
-
-candler.lib = lib
 
 return lib
