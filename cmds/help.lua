@@ -34,12 +34,14 @@ events.TICK:register(function()
                 catList[catk] = {description = catv.description}
                 for cmdk, cmdv in pairs(catv.commands) do
                     commandList[cmdk] = cmdv
+                    commandList[cmdk].isAlias = false
                     -- print(cmdv)
                     for _, alias in pairs(cmdv.aliases) do
                         commandList[alias] = {}
                         commandList[alias].description = cmdv.description
                         commandList[alias].arguments = cmdv.arguments
                         commandList[alias].aliases = {cmdk}
+                        commandList[alias].isAlias = true
                     end
                 end
             end
@@ -78,17 +80,22 @@ events.TICK:register(function()
                         goto continue
                     end
 
-                    if #combList[ba[i]].description > 50 then
-                        desc = string.sub(combList[ba[i]].description, 1, 50) .. "..."
-                    else
-                        desc = string.sub(combList[ba[i]].description, 1, 50)
-                    end
+                    if not combList[ba[i]].isAlias then
+                        if #combList[ba[i]].description > 50 then
+                            desc = string.sub(combList[ba[i]].description, 1, 50) .. "..."
+                        else
+                            desc = string.sub(combList[ba[i]].description, 1, 50)
+                        end
 
-                    desc = string.gsub(desc, "\\", "\\\\")
-                    -- desc = string.gsub("Lorem Ipsum Dolar Sit Amet", "\\", "\\\\")
-                    -- print(combList[ba[i]])
-                    desc = string.gsub(desc, "\"", "\\\"")
-                    printJson('[{"text":"\n' .. ba[i] .. ': ","color":"gold"},{"text":"' .. desc .. '","color":"white"}]')
+                        desc = string.gsub(desc, "\\", "\\\\")
+                        -- desc = string.gsub("Lorem Ipsum Dolar Sit Amet", "\\", "\\\\")
+                        -- print(combList[ba[i]])
+                        desc = string.gsub(desc, "\"", "\\\"")
+                        desc = '{"text":"' .. desc .. '","color":"white"}'
+                    else
+                        desc = '{"text":"Alias of ' .. candler.config.prefix .. combList[ba[i]].aliases[1] .. '","color":"yellow"}'
+                    end
+                    printJson('[{"text":"\n' .. ba[i] .. ': ","color":"gold"},' .. desc .. ']')
                     ::continue::
                 end
             elseif catList[string.lower(args[1])] then
@@ -133,7 +140,7 @@ events.TICK:register(function()
                     end
                     header = '["",{"text":"                    ","color":"yellow","strikethrough":true}," Help (' .. candler.config.prefix .. string.lower(args[2]) .. ') ",{"text":"                    ","color":"yellow","strikethrough":true}]'
                     printJson(header)
-            
+
                     -- Print description.
                     desc = string.gsub(candler.cats[string.lower(args[1])].commands[string.lower(args[2])].description, "\\", "\\\\")
                     desc = string.gsub(desc, "\"", "\\\"")
@@ -151,8 +158,11 @@ events.TICK:register(function()
                         end
                     end
                     aliases = aliases .. "]"
-                    printJson('{"text":"\nAliases (' .. idx .. '): ","color":"gold"}')
-                    printJson(aliases)
+                    
+                    if idx >= 1 then
+                        printJson('{"text":"\nAliases (' .. idx .. '): ","color":"gold"}')
+                        printJson(aliases)
+                    end
             
                     -- Generate and Print Usage
                     printJson('{"text":"\nUsage: ' .. candler.config.prefix .. string.lower(args[2]) ..' ","color":"gray"}')
@@ -194,25 +204,34 @@ events.TICK:register(function()
                 header = '["",{"text":"                    ","color":"yellow","strikethrough":true}," Help (' .. candler.config.prefix .. string.lower(args[1]) .. ') ",{"text":"                    ","color":"yellow","strikethrough":true}]'
                 printJson(header)
 
+                -- If the command is an alias, print out what command it is an alias of.
+                if commandList[string.lower(args[1])].isAlias then
+                    printJson('[{"text":"\nAlias of ' .. candler.config.prefix .. commandList[string.lower(args[1])].aliases[1] .. '","color":"gold","clickEvent":{"action":"figura_function","value":"candler.lib.sendCommand(\\\"help ' .. commandList[string.lower(args[1])].aliases[1] .. '\\\")"}}]')
+                end
+
                 -- Print description.
                 desc = string.gsub(commandList[string.lower(args[1])].description, "\\", "\\\\")
                 desc = string.gsub(desc, "\"", "\\\"")
                 printJson('[{"text":"\n' .. desc .. '","color":"white"}]')
 
                 -- Generate and Print Aliases
-                local idx = 0
-                local aliases = "["
-                for _, alias in pairs(commandList[string.lower(args[1])].aliases) do
-                    idx = idx + 1
-                    if idx == 1 then
-                        aliases = aliases .. '{"text":"' .. alias .. '","color":"white"}'
-                    else
-                        aliases = aliases .. ',{"text":", ","color":"gray"},{"text":"' .. alias .. '","color":"white"}'
+                if not commandList[string.lower(args[1])].isAlias then
+                    local idx = 0
+                    local aliases = "["
+                    for _, alias in pairs(commandList[string.lower(args[1])].aliases) do
+                        idx = idx + 1
+                        if idx == 1 then
+                            aliases = aliases .. '{"text":"' .. alias .. '","color":"white"}'
+                        else
+                            aliases = aliases .. ',{"text":", ","color":"gray"},{"text":"' .. alias .. '","color":"white"}'
+                        end
+                    end
+                    aliases = aliases .. "]"
+                    if idx >= 1 then
+                        printJson('{"text":"\nAliases (' .. idx .. '): ","color":"gold"}')
+                        printJson(aliases)
                     end
                 end
-                aliases = aliases .. "]"
-                printJson('{"text":"\nAliases (' .. idx .. '): ","color":"gold"}')
-                printJson(aliases)
 
                 -- Generate and Print Usage
                 printJson('{"text":"\nUsage: ' .. candler.config.prefix .. string.lower(args[1]) ..' ","color":"gray"}')
