@@ -6,13 +6,15 @@ candler.commands = {}
 -- Configuration for Candler.
 candler.config = {
     prefix = ".", -- The prefix Candler uses by default.
-    printCommand = 1, -- Should the command sent be printed into chat? Example: "> exampleCommand argument"
+    b_printCommand = 1, -- Should the command sent be printed into chat? Example: "> exampleCommand argument"
 }
 -- END CONFIG
 
 if config:load("candler") then
     candler.config = config:load("candler")
 end
+
+if candler.config.printCommand then candler.config.b_printCommand = candler.config.printCommand end
 
 local function split(inputstr, sep)
     if sep == nil then
@@ -144,7 +146,7 @@ end
 function lib.sendCommand(cmd, fb)
     local args = split(cmd, " ")
         
-        if candler.config.printCommand >=1 and fb then
+        if candler.config.b_printCommand >=1 and fb then
             local jsonMsg = '[{"text":"> ","color":"dark_gray"}'
             for i, v in ipairs(args) do
                 local thing = string.gsub(v, "\\", "\\\\")
