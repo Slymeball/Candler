@@ -226,7 +226,7 @@ end
 lib.newCategory("Candler", {
     description = "A command interpreter for Figura.",
     author = "Slymeball",
-    version = "0.1.1",
+    version = "0.1.2",
     website = "https://github.com/Slymeball/Candler/",
     issues = "https://github.com/Slymeball/Candler/issues"
 })
