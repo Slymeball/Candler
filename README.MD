@@ -1,4 +1,5 @@
-# Candler - The Figura Command Interpreter
+<p align="center"><img src="https://github.com/Slymeball/figura-avatars/blob/main/Icons/candler%20icon.png?raw=true" width=25%></p>
+<h1 align="center">Candler - The Figura Command Interpreter</h1>
 
 Candler is a modular command interpreter for the Figura mod for Minecraft.
 
