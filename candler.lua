@@ -1,3 +1,6 @@
+-- BetterRequire Compatability
+modName = "slyme.candler"
+
 candler = {}
 
 candler.cats = {}
